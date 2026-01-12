@@ -11,7 +11,7 @@
       "cargo",
       "build",
       "--release"
-    ]
+    ],
     start_cmd: [
       "cargo",
       "run",
