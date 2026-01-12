@@ -1,0 +1,90 @@
+{
+  schema_version: 1,
+  manifest: {
+    name: "uvc_camera",
+    tag: "0.1.0",
+    labels: [
+      "uvc",
+      "camera",
+      "usb",
+    ],
+    add_cmd: [
+      "cargo",
+      "build",
+      "--release"
+    ],
+    start_cmd: [
+      "cargo",
+      "run",
+      "--release"
+    ]
+  },
+  parameters: {
+    device: {
+      physical: "string",
+      sim: "string",
+      priority: "string"
+    },
+    video: {
+      frame_rate: "u16",
+      resolution: {
+        width: "u16",
+        height: "u16",
+      },
+      encoding: "string",
+    },
+  },
+  interfaces: {
+    exposes: {
+      topics: [
+        {
+          name: "video_stream",
+          qos_profile: "sensor_data",
+          message_format: {
+            header: {
+              $type: "object",
+              stamp: "time",
+              frame_id: "u32",
+            },
+            encoding: "string",
+            width: "u32",
+            height: "u32",
+            image: {
+              $type: "array",
+              $items: "u8",
+              $length: 3
+            },
+          },
+        }
+      ],
+      services: [
+        {
+          name: "enable_camera",
+          request_message_format: {
+            enable: "bool",
+          },
+          response_message_format: {
+            enabled: "bool",
+            error_msg: { // Won't contain anything if enabled = True
+              $type: "string",
+              $optional: true
+            },
+          },
+        },
+        {
+          name: "get_camera_info",
+          response_message_format: {
+            card_type: "string",
+            size: "string",
+            interval: "string"
+          },
+        },
+      ],
+    },
+    subscribes_to: {
+      topics: [],
+      services: [],
+      actions: [],
+    },
+  }
+}

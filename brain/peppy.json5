@@ -1,0 +1,57 @@
+{
+  schema_version: 1,
+  manifest: {
+    name: "my_robot_brain",
+    tag: "0.1.0",
+    labels: [
+      "brain"
+    ],
+    start_cmd: [
+      "cargo",
+      "run",
+      "--release"
+    ]
+  },
+  parameters: {},
+  interfaces: {
+    exposes: {
+      topics: [],
+      services: [],
+      actions: [],
+    },
+    subscribes_to: {
+      // The brain receives the inputs from the camera
+      topics: [
+        {
+          id: "camera_front",
+          node: "uvc_camera",
+          name: "video_stream",
+          tag: "0.1.0",
+        }
+      ],
+      services: [
+        {
+          id: "camera_enable",
+          node: "uvc_camera",
+          name: "enable_camera",
+          tag: "0.1.0",
+        }
+      ],
+      // And emit actions for the controller to take
+      actions: [
+        {
+          id: "move_right_arm_action",
+          node: "my_action_robot_controller",
+          name: "move_right_arm",
+          tag: "0.1.0",
+        },
+        {
+          id: "move_left_arm_action",
+          node: "my_action_robot_controller",
+          name: "move_left_arm",
+          tag: "0.1.0",
+        }
+      ]
+    },
+  }
+}

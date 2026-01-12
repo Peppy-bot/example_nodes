@@ -1,0 +1,11 @@
+[package]
+name = "controller"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+peppygen = { path = ".peppy/libs/peppygen" }
+peppylib = { path = ".peppy/libs/peppygen/crates/peppylib" }
+bytes = "1"
+tokio = { version = "1.47", features = ["full"] }
+tracing = "0.1"
