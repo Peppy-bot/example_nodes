@@ -1,11 +1,12 @@
-// A simple node that receives commands from a brain and control the joints of the robot
+// A simple node that receives commands from a brain/a controller or teleop and control the joints of a particular model of robot
 {
   schema_version: 1,
   manifest: {
-    name: "my_action_robot_controller",
+    name: "openarm01_robot_controller",
     tag: "0.1.0",
     labels: [
       "controller",
+      "openarm"
     ],
     add_cmd: [
       "cargo",
@@ -29,6 +30,7 @@
           goal_service: {
             request_message_format: {
               arm_id: "u16",
+              // x, y, z
               desired_position: {
                 $type: "array",
                 $items: "i32",
@@ -64,6 +66,7 @@
           goal_service: {
             request_message_format: {
               arm_id: "u16",
+              // x, y, z
               desired_position: {
                 $type: "array",
                 $items: "i32",
