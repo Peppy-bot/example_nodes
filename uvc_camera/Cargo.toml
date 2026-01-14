@@ -9,5 +9,4 @@ peppylib = { path = ".peppy/libs/peppygen/crates/peppylib" }
 bytes = "1"
 tokio = { version = "1.47", features = ["full"] }
 tracing = "0.1"
-video-rs = { version = "0.10", features = ["ndarray"] }
-ndarray = "0.16"
+ffmpeg-next = { version = "8", features = ["build"] }
