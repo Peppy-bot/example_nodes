@@ -25,26 +25,38 @@ fn main() -> Result<()> {
 }
 
 async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
+    println!("[controller] Left arm action handler started");
     let mut action = move_left_arm::ActionHandle::expose(&node_runner).await?;
     let mut last_position = [0, 0, 0];
 
     loop {
         let Some(goal_request) = wait_for_left_goal(&mut action).await? else {
+            println!("[controller] Left arm action handler closed");
             break;
         };
 
         let desired_position = goal_request.data.desired_position;
+        println!("[controller] Left arm received goal: {:?}", desired_position);
         let duration = choose_action_duration();
 
         let outcome =
             execute_left_arm_goal(&mut action, last_position, desired_position, duration).await?;
 
         let final_position = match outcome {
-            ActionOutcome::Completed(position) | ActionOutcome::Cancelled(position) => {
+            ActionOutcome::Completed(position) => {
+                println!("[controller] Left arm completed at position: {:?}", position);
                 last_position = position;
                 position
             }
-            ActionOutcome::Closed => break,
+            ActionOutcome::Cancelled(position) => {
+                println!("[controller] Left arm cancelled at position: {:?}", position);
+                last_position = position;
+                position
+            }
+            ActionOutcome::Closed => {
+                println!("[controller] Left arm action closed");
+                break;
+            }
         };
 
         let handled = action
@@ -62,26 +74,38 @@ async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<(
 }
 
 async fn run_right_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
+    println!("[controller] Right arm action handler started");
     let mut action = move_right_arm::ActionHandle::expose(&node_runner).await?;
     let mut last_position = [0, 0, 0];
 
     loop {
         let Some(goal_request) = wait_for_right_goal(&mut action).await? else {
+            println!("[controller] Right arm action handler closed");
             break;
         };
 
         let desired_position = goal_request.data.desired_position;
+        println!("[controller] Right arm received goal: {:?}", desired_position);
         let duration = choose_action_duration();
 
         let outcome =
             execute_right_arm_goal(&mut action, last_position, desired_position, duration).await?;
 
         let final_position = match outcome {
-            ActionOutcome::Completed(position) | ActionOutcome::Cancelled(position) => {
+            ActionOutcome::Completed(position) => {
+                println!("[controller] Right arm completed at position: {:?}", position);
                 last_position = position;
                 position
             }
-            ActionOutcome::Closed => break,
+            ActionOutcome::Cancelled(position) => {
+                println!("[controller] Right arm cancelled at position: {:?}", position);
+                last_position = position;
+                position
+            }
+            ActionOutcome::Closed => {
+                println!("[controller] Right arm action closed");
+                break;
+            }
         };
 
         let handled = action

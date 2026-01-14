@@ -30,6 +30,7 @@ async fn run_video_loop(
     node_runner: Arc<peppygen::NodeRunner>,
     video_params: parameters::video::Video,
 ) -> Result<()> {
+    println!("[uvc_camera] Starting video loop...");
     let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
         .iter()
         .collect();
@@ -37,6 +38,7 @@ async fn run_video_loop(
     if !video_path.exists() {
         panic!("Video file not found: {}", video_path.display());
     }
+    println!("[uvc_camera] Video file found: {}", video_path.display());
 
     let mut frame_id: u32 = 0;
 
@@ -46,6 +48,7 @@ async fn run_video_loop(
     let frame_duration_ms = 1000 / video_params.frame_rate as u64;
 
     loop {
+        println!("[uvc_camera] Opening video file for playback...");
         let mut input = ffmpeg::format::input(&video_path).unwrap_or_else(|e| {
             panic!("Failed to open video file '{}': {e}", video_path.display())
         });
@@ -91,6 +94,7 @@ async fn run_video_loop(
                     // Use blocking emit since we're in a sync closure
                     let node_runner = Arc::clone(&node_runner);
                     let encoding = encoding.clone();
+                    let current_frame_id = frame_id;
                     tokio::task::block_in_place(|| {
                         tokio::runtime::Handle::current().block_on(async {
                             video_stream::emit(&node_runner, header, encoding, width, height, data)
@@ -98,6 +102,7 @@ async fn run_video_loop(
                                 .expect("Failed to emit frame");
                         });
                     });
+                    println!("[uvc_camera] Emitted frame {}", current_frame_id);
 
                     frame_id = frame_id.wrapping_add(1);
 
@@ -118,5 +123,6 @@ async fn run_video_loop(
         receive_and_emit_frames(&mut decoder).ok();
 
         // Loop restarts - video will be reopened from the beginning
+        println!("[uvc_camera] Video ended, restarting from beginning...");
     }
 }

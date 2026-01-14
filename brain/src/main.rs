@@ -6,12 +6,16 @@ use std::sync::Arc;
 use std::time::Duration;
 
 async fn ai_process(node_runner: Arc<NodeRunner>) {
+    println!("[brain] AI process started, waiting for video frames...");
     loop {
         // Subscribe to video frames from the camera
         let frame_result = video_stream::on_next_message_received(&node_runner, None, None).await;
 
         let (_instance_id, frame) = match frame_result {
-            Ok(msg) => msg,
+            Ok(msg) => {
+                println!("[brain] Received video frame");
+                msg
+            }
             Err(e) => {
                 eprintln!("Failed to receive video frame: {e}");
                 continue;
@@ -24,8 +28,10 @@ async fn ai_process(node_runner: Arc<NodeRunner>) {
             frame.image[1] as i32,
             frame.image[2] as i32,
         ];
+        println!("[brain] Generated arm position: {:?}", fake_position);
 
         // Fire action goals to both arms concurrently
+        println!("[brain] Firing goals to both arms...");
         let left_goal = left_arm::GoalRequest {
             arm_id: 0,
             desired_position: fake_position,
@@ -58,9 +64,13 @@ async fn ai_process(node_runner: Arc<NodeRunner>) {
 
         if let Err(e) = left_result {
             eprintln!("Failed to fire left arm goal: {e}");
+        } else {
+            println!("[brain] Left arm goal completed successfully");
         }
         if let Err(e) = right_result {
             eprintln!("Failed to fire right arm goal: {e}");
+        } else {
+            println!("[brain] Right arm goal completed successfully");
         }
     }
 }
