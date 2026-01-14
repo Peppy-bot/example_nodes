@@ -47,6 +47,13 @@ async fn run_video_loop(
     let encoding = video_params.encoding.clone();
     let frame_duration_ms = 1000 / video_params.frame_rate as u64;
 
+    // Find software AV1 decoder once before the loop
+    let sw_codec = ffmpeg::decoder::find_by_name("libdav1d")
+        .or_else(|| ffmpeg::decoder::find_by_name("libaom-av1"));
+    if sw_codec.is_some() {
+        println!("[uvc_camera] Using software AV1 decoder");
+    }
+
     loop {
         println!("[uvc_camera] Opening video file for playback...");
         let mut input = ffmpeg::format::input(&video_path).unwrap_or_else(|e| {
@@ -59,10 +66,19 @@ async fn run_video_loop(
             .expect("No video stream found");
         let video_stream_index = video_stream.index();
 
-        let context_decoder = ffmpeg::codec::Context::from_parameters(video_stream.parameters())
-            .expect("Failed to create codec context");
+        let mut context_decoder =
+            ffmpeg::codec::Context::from_parameters(video_stream.parameters())
+                .expect("Failed to create codec context");
+
+        // Use software decoder if available, otherwise fall back to default
+        let codec = sw_codec
+            .or_else(|| ffmpeg::decoder::find(video_stream.parameters().id()))
+            .expect("No decoder found for video stream");
+
         let mut decoder = context_decoder
             .decoder()
+            .open_as(codec)
+            .expect("Failed to open decoder")
             .video()
             .expect("Failed to create video decoder");
 
