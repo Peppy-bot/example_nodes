@@ -36,13 +36,8 @@ async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<(
         let desired_position = goal_request.data.desired_position;
         let duration = choose_action_duration();
 
-        let outcome = execute_left_arm_goal(
-            &mut action,
-            last_position,
-            desired_position,
-            duration,
-        )
-        .await?;
+        let outcome =
+            execute_left_arm_goal(&mut action, last_position, desired_position, duration).await?;
 
         let final_position = match outcome {
             ActionOutcome::Completed(position) | ActionOutcome::Cancelled(position) => {
@@ -78,13 +73,8 @@ async fn run_right_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<
         let desired_position = goal_request.data.desired_position;
         let duration = choose_action_duration();
 
-        let outcome = execute_right_arm_goal(
-            &mut action,
-            last_position,
-            desired_position,
-            duration,
-        )
-        .await?;
+        let outcome =
+            execute_right_arm_goal(&mut action, last_position, desired_position, duration).await?;
 
         let final_position = match outcome {
             ActionOutcome::Completed(position) | ActionOutcome::Cancelled(position) => {
@@ -116,8 +106,7 @@ async fn wait_for_left_goal(
 
     let handled = action
         .handle_goal_next_request(move |request| {
-            *goal_holder_clone.lock().expect("left goal lock poisoned") =
-                Some(request);
+            *goal_holder_clone.lock().expect("left goal lock poisoned") = Some(request);
             Ok(move_left_arm::GoalResponse::new(true))
         })
         .await?;
@@ -126,10 +115,7 @@ async fn wait_for_left_goal(
         return Ok(None);
     }
 
-    Ok(goal_holder
-        .lock()
-        .expect("left goal lock poisoned")
-        .take())
+    Ok(goal_holder.lock().expect("left goal lock poisoned").take())
 }
 
 async fn wait_for_right_goal(
@@ -140,8 +126,7 @@ async fn wait_for_right_goal(
 
     let handled = action
         .handle_goal_next_request(move |request| {
-            *goal_holder_clone.lock().expect("right goal lock poisoned") =
-                Some(request);
+            *goal_holder_clone.lock().expect("right goal lock poisoned") = Some(request);
             Ok(move_right_arm::GoalResponse::new(true))
         })
         .await?;
@@ -150,10 +135,7 @@ async fn wait_for_right_goal(
         return Ok(None);
     }
 
-    Ok(goal_holder
-        .lock()
-        .expect("right goal lock poisoned")
-        .take())
+    Ok(goal_holder.lock().expect("right goal lock poisoned").take())
 }
 
 fn choose_action_duration() -> Duration {
@@ -279,9 +261,7 @@ enum CancelPoll {
     Closed,
 }
 
-async fn poll_left_cancel(
-    action: &mut move_left_arm::ActionHandle,
-) -> Result<CancelPoll> {
+async fn poll_left_cancel(action: &mut move_left_arm::ActionHandle) -> Result<CancelPoll> {
     match tokio::time::timeout(
         Duration::from_millis(0),
         action.handle_cancel_next_request(|_request| {
@@ -298,9 +278,7 @@ async fn poll_left_cancel(
     }
 }
 
-async fn poll_right_cancel(
-    action: &mut move_right_arm::ActionHandle,
-) -> Result<CancelPoll> {
+async fn poll_right_cancel(action: &mut move_right_arm::ActionHandle) -> Result<CancelPoll> {
     match tokio::time::timeout(
         Duration::from_millis(0),
         action.handle_cancel_next_request(|_request| {

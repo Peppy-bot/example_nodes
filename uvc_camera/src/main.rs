@@ -17,11 +17,12 @@ fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    run(|_args, node_runner| async move {
+    run(|args, node_runner| async move {
         let node_runner = Arc::clone(&node_runner);
+        let video_params = args.video.clone();
 
         tokio::spawn(async move {
-            if let Err(e) = run_video_loop(node_runner).await {
+            if let Err(e) = run_video_loop(node_runner, video_params).await {
                 tracing::error!("Video loop error: {e:?}");
             }
         });
@@ -30,7 +31,10 @@ fn main() -> Result<()> {
     })
 }
 
-async fn run_video_loop(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
+async fn run_video_loop(
+    node_runner: Arc<peppygen::NodeRunner>,
+    video_params: peppygen::parameters::video::Video,
+) -> Result<()> {
     let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
         .iter()
         .collect();
@@ -42,6 +46,11 @@ async fn run_video_loop(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
     let source = Url::from_file_path(&video_path).expect("Failed to create URL from path");
     let mut frame_id: u32 = 0;
 
+    let width = video_params.resolution.width as u32;
+    let height = video_params.resolution.height as u32;
+    let encoding = video_params.encoding.clone();
+    let frame_duration_ms = 1000 / video_params.frame_rate as u64;
+
     loop {
         let mut decoder = Decoder::new(&source).unwrap_or_else(|e| {
             panic!(
@@ -49,7 +58,6 @@ async fn run_video_loop(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
                 video_path.display()
             )
         });
-        let (width, height) = decoder.size();
 
         for frame in decoder.decode_iter() {
             let (_, frame) = match frame {
@@ -67,21 +75,13 @@ async fn run_video_loop(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
                 frame_id,
             };
 
-            video_stream::emit(
-                &node_runner,
-                header,
-                "rgb8".to_string(),
-                width,
-                height,
-                data,
-            )
-            .await
-            .expect("Failed to emit frame");
+            video_stream::emit(&node_runner, header, encoding.clone(), width, height, data)
+                .await
+                .expect("Failed to emit frame");
 
             frame_id = frame_id.wrapping_add(1);
 
-            // Pace the emission to roughly match video framerate (assume ~30fps)
-            tokio::time::sleep(tokio::time::Duration::from_millis(33)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(frame_duration_ms)).await;
         }
 
         // Loop restarts - video will be reopened from the beginning

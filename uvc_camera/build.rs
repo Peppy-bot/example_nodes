@@ -16,9 +16,7 @@ fn main() {
 
     // Check for FFmpeg libraries
     for lib in REQUIRED_LIBS {
-        let status = Command::new("pkg-config")
-            .args(["--exists", lib])
-            .status();
+        let status = Command::new("pkg-config").args(["--exists", lib]).status();
 
         match status {
             Ok(s) if s.success() => {}
@@ -27,9 +25,7 @@ fn main() {
     }
 
     // Check for libclang (needed by bindgen)
-    let clang_check = Command::new("llvm-config")
-        .arg("--version")
-        .output();
+    let clang_check = Command::new("llvm-config").arg("--version").output();
 
     if clang_check.is_err() || !clang_check.unwrap().status.success() {
         // Also check if libclang.so exists in common paths
@@ -47,7 +43,9 @@ fn main() {
             "/usr/lib/libclang.so",
         ];
 
-        missing_clang = !common_paths.iter().any(|p| std::path::Path::new(p).exists());
+        missing_clang = !common_paths
+            .iter()
+            .any(|p| std::path::Path::new(p).exists());
     }
 
     if !missing_libs.is_empty() || missing_clang {
