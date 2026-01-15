@@ -1,28 +1,57 @@
 use std::process::Command;
 
-fn main() {
-    // Check for nasm which is required by ffmpeg-sys-next for x86 assembly optimizations
-    let nasm_check = Command::new("nasm").arg("-v").output();
+fn check_pkg_config(lib: &str) -> bool {
+    Command::new("pkg-config")
+        .args(["--exists", lib])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
 
-    match nasm_check {
-        Ok(output) if output.status.success() => {
-            // nasm is available
-        }
-        _ => {
-            eprintln!();
-            eprintln!("╔══════════════════════════════════════════════════════════════════╗");
-            eprintln!("║                     MISSING DEPENDENCY: nasm                     ║");
-            eprintln!("╠══════════════════════════════════════════════════════════════════╣");
-            eprintln!("║ The 'nasm' assembler is required to build FFmpeg.                ║");
-            eprintln!("║                                                                  ║");
-            eprintln!("║ Install it with:                                                 ║");
-            eprintln!("║   Ubuntu/Debian:  sudo apt install nasm                          ║");
-            eprintln!("║   Fedora:         sudo dnf install nasm                          ║");
-            eprintln!("║   Arch:           sudo pacman -S nasm                            ║");
-            eprintln!("║   macOS:          brew install nasm                              ║");
-            eprintln!("╚══════════════════════════════════════════════════════════════════╝");
-            eprintln!();
-            panic!("nasm not found - please install it and retry the build");
+fn main() {
+    let required_libs = [
+        ("libavcodec", "ffmpeg libraries"),
+        ("libavformat", "ffmpeg libraries"),
+        ("libavutil", "ffmpeg libraries"),
+        ("libswscale", "ffmpeg libraries"),
+        ("dav1d", "libdav1d (AV1 software decoder)"),
+    ];
+
+    let mut missing = Vec::new();
+
+    for (lib, description) in &required_libs {
+        if !check_pkg_config(lib) {
+            missing.push((*lib, *description));
         }
     }
+
+    if !missing.is_empty() {
+        eprintln!();
+        eprintln!("╔══════════════════════════════════════════════════════════════════╗");
+        eprintln!("║              MISSING REQUIRED SYSTEM LIBRARIES                   ║");
+        eprintln!("╠══════════════════════════════════════════════════════════════════╣");
+        for (lib, desc) in &missing {
+            eprintln!("║  - {lib:<15} ({desc})", lib = lib, desc = desc);
+        }
+        eprintln!("╠══════════════════════════════════════════════════════════════════╣");
+        eprintln!("║ Install the missing libraries:                                   ║");
+        eprintln!("║                                                                  ║");
+        eprintln!("║ Ubuntu/Debian:                                                   ║");
+        eprintln!("║   sudo apt install libavcodec-dev libavformat-dev \\              ║");
+        eprintln!("║                    libavutil-dev libswscale-dev libdav1d-dev     ║");
+        eprintln!("║                                                                  ║");
+        eprintln!("║ Fedora:                                                          ║");
+        eprintln!("║   sudo dnf install ffmpeg-devel libdav1d-devel                   ║");
+        eprintln!("║                                                                  ║");
+        eprintln!("║ Arch Linux:                                                      ║");
+        eprintln!("║   sudo pacman -S ffmpeg dav1d                                    ║");
+        eprintln!("║                                                                  ║");
+        eprintln!("║ macOS (Homebrew):                                                ║");
+        eprintln!("║   brew install ffmpeg dav1d                                      ║");
+        eprintln!("╚══════════════════════════════════════════════════════════════════╝");
+        eprintln!();
+        panic!("Missing required system libraries - see above for installation instructions");
+    }
+
+    println!("cargo::rerun-if-env-changed=PKG_CONFIG_PATH");
 }

@@ -7,7 +7,7 @@ use peppygen::parameters;
 use peppygen::{Result, run};
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::time::SystemTime;
+use std::time::{Instant, SystemTime};
 
 fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
@@ -41,18 +41,12 @@ async fn run_video_loop(
     println!("[uvc_camera] Video file found: {}", video_path.display());
 
     let mut frame_id: u32 = 0;
+    let mut last_print_time = Instant::now();
 
     let width = video_params.resolution.width as u32;
     let height = video_params.resolution.height as u32;
     let encoding = video_params.encoding.clone();
     let frame_duration_ms = 1000 / video_params.frame_rate as u64;
-
-    // Find software AV1 decoder once before the loop
-    let sw_codec = ffmpeg::decoder::find_by_name("libdav1d")
-        .or_else(|| ffmpeg::decoder::find_by_name("libaom-av1"));
-    if sw_codec.is_some() {
-        println!("[uvc_camera] Using software AV1 decoder");
-    }
 
     loop {
         println!("[uvc_camera] Opening video file for playback...");
@@ -66,13 +60,16 @@ async fn run_video_loop(
             .expect("No video stream found");
         let video_stream_index = video_stream.index();
 
-        let context_decoder = ffmpeg::codec::Context::from_parameters(video_stream.parameters())
-            .expect("Failed to create codec context");
+        // Use software decoder (libdav1d) to avoid hardware acceleration issues
+        let codec = ffmpeg::decoder::find_by_name("libdav1d")
+            .expect("libdav1d decoder not found - install libdav1d-dev");
 
-        // Use software decoder if available, otherwise fall back to default
-        let codec = sw_codec
-            .or_else(|| ffmpeg::decoder::find(video_stream.parameters().id()))
-            .expect("No decoder found for video stream");
+        let mut context_decoder =
+            ffmpeg::codec::Context::from_parameters(video_stream.parameters())
+                .expect("Failed to create codec context");
+
+        // Disable threading to avoid potential hardware acceleration paths
+        context_decoder.set_threading(ffmpeg::threading::Config::default());
 
         let mut decoder = context_decoder
             .decoder()
@@ -117,7 +114,10 @@ async fn run_video_loop(
                                 .expect("Failed to emit frame");
                         });
                     });
-                    println!("[uvc_camera] Emitted frame {}", current_frame_id);
+                    if last_print_time.elapsed().as_secs() >= 3 {
+                        println!("[uvc_camera] Emitted frame {}", current_frame_id);
+                        last_print_time = Instant::now();
+                    }
 
                     frame_id = frame_id.wrapping_add(1);
 
