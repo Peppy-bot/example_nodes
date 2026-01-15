@@ -66,9 +66,8 @@ async fn run_video_loop(
             .expect("No video stream found");
         let video_stream_index = video_stream.index();
 
-        let mut context_decoder =
-            ffmpeg::codec::Context::from_parameters(video_stream.parameters())
-                .expect("Failed to create codec context");
+        let context_decoder = ffmpeg::codec::Context::from_parameters(video_stream.parameters())
+            .expect("Failed to create codec context");
 
         // Use software decoder if available, otherwise fall back to default
         let codec = sw_codec
