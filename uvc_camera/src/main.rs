@@ -16,6 +16,15 @@ fn main() -> Result<()> {
         let node_runner = Arc::clone(&node_runner);
         let video_params = args.video.clone();
 
+        // Validate encoding before spawning - this node outputs RGB24 format data
+        let encoding = &video_params.encoding;
+        if encoding != "rgb8" && encoding != "rgb" {
+            panic!(
+                "Invalid encoding '{}'. This camera node outputs RGB24 data, so encoding must be 'rgb8' or 'rgb'",
+                encoding
+            );
+        }
+
         tokio::spawn(async move {
             if let Err(e) = run_video_loop(node_runner, video_params).await {
                 tracing::error!("Video loop error: {e:?}");
