@@ -1,12 +1,12 @@
 use peppygen::exposed_actions::{move_left_arm, move_right_arm};
-use peppygen::{Result, run};
+use peppygen::{NodeBuilder, Parameters, Result};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 fn main() -> Result<()> {
-    run(|_args, node_runner| async move {
+    NodeBuilder::<Parameters>::new().run(|_args, node_runner| async move {
         let left_runner = Arc::clone(&node_runner);
-        let right_runner = Arc::clone(&node_runner);
+        let right_runner = node_runner;
 
         tokio::spawn(async move {
             if let Err(error) = run_left_arm_action(left_runner).await {
@@ -36,7 +36,10 @@ async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<(
         };
 
         let desired_position = goal_request.data.desired_position;
-        println!("[controller] Left arm received goal: {:?}", desired_position);
+        println!(
+            "[controller] Left arm received goal: {:?}",
+            desired_position
+        );
         let duration = choose_action_duration();
 
         let outcome =
@@ -44,12 +47,18 @@ async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<(
 
         let final_position = match outcome {
             ActionOutcome::Completed(position) => {
-                println!("[controller] Left arm completed at position: {:?}", position);
+                println!(
+                    "[controller] Left arm completed at position: {:?}",
+                    position
+                );
                 last_position = position;
                 position
             }
             ActionOutcome::Cancelled(position) => {
-                println!("[controller] Left arm cancelled at position: {:?}", position);
+                println!(
+                    "[controller] Left arm cancelled at position: {:?}",
+                    position
+                );
                 last_position = position;
                 position
             }
@@ -85,7 +94,10 @@ async fn run_right_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<
         };
 
         let desired_position = goal_request.data.desired_position;
-        println!("[controller] Right arm received goal: {:?}", desired_position);
+        println!(
+            "[controller] Right arm received goal: {:?}",
+            desired_position
+        );
         let duration = choose_action_duration();
 
         let outcome =
@@ -93,12 +105,18 @@ async fn run_right_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<
 
         let final_position = match outcome {
             ActionOutcome::Completed(position) => {
-                println!("[controller] Right arm completed at position: {:?}", position);
+                println!(
+                    "[controller] Right arm completed at position: {:?}",
+                    position
+                );
                 last_position = position;
                 position
             }
             ActionOutcome::Cancelled(position) => {
-                println!("[controller] Right arm cancelled at position: {:?}", position);
+                println!(
+                    "[controller] Right arm cancelled at position: {:?}",
+                    position
+                );
                 last_position = position;
                 position
             }

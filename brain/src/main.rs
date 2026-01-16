@@ -1,7 +1,7 @@
 use peppygen::subscribed_actions::my_action_robot_controller_move_left_arm as left_arm;
 use peppygen::subscribed_actions::my_action_robot_controller_move_right_arm as right_arm;
 use peppygen::subscribed_topics::uvc_camera_video_stream as video_stream;
-use peppygen::{NodeRunner, QoSProfile, Result, run};
+use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -76,7 +76,7 @@ async fn ai_process(node_runner: Arc<NodeRunner>) {
 }
 
 fn main() -> Result<()> {
-    run(|_args, node_runner| async move {
+    NodeBuilder::<Parameters>::new().run(|_args, node_runner| async move {
         tokio::spawn(ai_process(node_runner));
         Ok(())
     })

@@ -4,7 +4,7 @@ use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
 use peppygen::exposed_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters;
-use peppygen::{Result, run};
+use peppygen::{NodeBuilder, Parameters, Result};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
@@ -12,8 +12,7 @@ use std::time::{Instant, SystemTime};
 fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
 
-    run(|args, node_runner| async move {
-        let node_runner = Arc::clone(&node_runner);
+    NodeBuilder::new().run(|args: Parameters, node_runner| async move {
         let video_params = args.video.clone();
 
         // Validate encoding before spawning - this node outputs RGB24 format data
