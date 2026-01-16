@@ -4,10 +4,16 @@ use peppygen::subscribed_topics::uvc_camera_video_stream as video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
 use std::sync::Arc;
 use std::time::Duration;
+use tokio_util::sync::CancellationToken;
 
-async fn ai_process(node_runner: Arc<NodeRunner>) {
+async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToken) {
     println!("[brain] AI process started, waiting for video frames...");
     loop {
+        if cancel_token.is_cancelled() {
+            println!("[brain] Shutdown requested, stopping AI process");
+            return;
+        }
+
         // Subscribe to video frames from the camera
         let frame_result = video_stream::on_next_message_received(&node_runner, None, None).await;
 
@@ -77,7 +83,10 @@ async fn ai_process(node_runner: Arc<NodeRunner>) {
 
 fn main() -> Result<()> {
     NodeBuilder::<Parameters>::new().run(|_args, node_runner| async move {
-        tokio::spawn(ai_process(node_runner));
+        let cancel_token = node_runner.cancellation_token().clone();
+        tokio::spawn(async move {
+            ai_process(node_runner, cancel_token).await;
+        });
         Ok(())
     })
 }

@@ -316,6 +316,7 @@ dependencies = [
  "peppygen",
  "peppylib",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 

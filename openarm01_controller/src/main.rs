@@ -2,20 +2,23 @@ use peppygen::exposed_actions::{move_left_arm, move_right_arm};
 use peppygen::{NodeBuilder, Parameters, Result};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio_util::sync::CancellationToken;
 
 fn main() -> Result<()> {
     NodeBuilder::<Parameters>::new().run(|_args, node_runner| async move {
         let left_runner = Arc::clone(&node_runner);
-        let right_runner = node_runner;
+        let right_runner = Arc::clone(&node_runner);
+        let left_cancel_token = node_runner.cancellation_token().clone();
+        let right_cancel_token = node_runner.cancellation_token().clone();
 
         tokio::spawn(async move {
-            if let Err(error) = run_left_arm_action(left_runner).await {
+            if let Err(error) = run_left_arm_action(left_runner, left_cancel_token).await {
                 tracing::error!("Left arm action error: {error:?}");
             }
         });
 
         tokio::spawn(async move {
-            if let Err(error) = run_right_arm_action(right_runner).await {
+            if let Err(error) = run_right_arm_action(right_runner, right_cancel_token).await {
                 tracing::error!("Right arm action error: {error:?}");
             }
         });
@@ -24,12 +27,20 @@ fn main() -> Result<()> {
     })
 }
 
-async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
+async fn run_left_arm_action(
+    node_runner: Arc<peppygen::NodeRunner>,
+    cancel_token: CancellationToken,
+) -> Result<()> {
     println!("[controller] Left arm action handler started");
     let mut action = move_left_arm::ActionHandle::expose(&node_runner).await?;
     let mut last_position = [0, 0, 0];
 
     loop {
+        if cancel_token.is_cancelled() {
+            println!("[controller] Left arm shutdown requested");
+            break;
+        }
+
         let Some(goal_request) = wait_for_left_goal(&mut action).await? else {
             println!("[controller] Left arm action handler closed");
             break;
@@ -82,12 +93,20 @@ async fn run_left_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<(
     Ok(())
 }
 
-async fn run_right_arm_action(node_runner: Arc<peppygen::NodeRunner>) -> Result<()> {
+async fn run_right_arm_action(
+    node_runner: Arc<peppygen::NodeRunner>,
+    cancel_token: CancellationToken,
+) -> Result<()> {
     println!("[controller] Right arm action handler started");
     let mut action = move_right_arm::ActionHandle::expose(&node_runner).await?;
     let mut last_position = [0, 0, 0];
 
     loop {
+        if cancel_token.is_cancelled() {
+            println!("[controller] Right arm shutdown requested");
+            break;
+        }
+
         let Some(goal_request) = wait_for_right_goal(&mut action).await? else {
             println!("[controller] Right arm action handler closed");
             break;
