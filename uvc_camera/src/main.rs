@@ -9,6 +9,7 @@ use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
+use tokio_util::sync::CancellationToken;
 
 fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
@@ -54,8 +55,10 @@ fn main() -> Result<()> {
             );
         }
 
+        // Long running tasks should always be spawned in a different thread
+        let cancel_token = node_runner.cancellation_token().clone();
         tokio::spawn(async move {
-            if let Err(e) = run_video_loop(node_runner, video_params).await {
+            if let Err(e) = run_video_loop(node_runner, video_params, cancel_token).await {
                 tracing::error!("Video loop error: {e:?}");
             }
         });
@@ -67,6 +70,7 @@ fn main() -> Result<()> {
 async fn run_video_loop(
     node_runner: Arc<peppygen::NodeRunner>,
     video_params: parameters::video::Video,
+    cancel_token: CancellationToken,
 ) -> Result<()> {
     println!("[uvc_camera] Starting video loop...");
     let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
@@ -87,6 +91,11 @@ async fn run_video_loop(
     let frame_duration_ms = 1000 / video_params.frame_rate as u64;
 
     loop {
+        if cancel_token.is_cancelled() {
+            println!("[uvc_camera] Shutdown requested, stopping video loop");
+            return Ok(());
+        }
+
         println!("[uvc_camera] Opening video file for playback...");
         let mut input = ffmpeg::format::input(&video_path).unwrap_or_else(|e| {
             panic!("Failed to open video file '{}': {e}", video_path.display())
@@ -165,6 +174,10 @@ async fn run_video_loop(
             };
 
         for (stream, packet) in input.packets() {
+            if cancel_token.is_cancelled() {
+                println!("[uvc_camera] Shutdown requested, stopping video loop");
+                return Ok(());
+            }
             if stream.index() == video_stream_index {
                 decoder.send_packet(&packet).ok();
                 receive_and_emit_frames(&mut decoder).ok();

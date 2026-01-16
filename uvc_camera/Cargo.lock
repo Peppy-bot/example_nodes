@@ -2296,6 +2296,7 @@ dependencies = [
  "sha2",
  "thiserror 2.0.17",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 
@@ -4019,6 +4020,7 @@ dependencies = [
  "peppylib",
  "serde_json",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 
