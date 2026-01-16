@@ -4,7 +4,8 @@ use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
 use peppygen::exposed_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters;
-use peppygen::{NodeBuilder, Parameters, Result};
+use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
+use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
@@ -12,8 +13,37 @@ use std::time::{Instant, SystemTime};
 fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
 
-    NodeBuilder::new().run(|args: Parameters, node_runner| async move {
+    // Example configuration; consider using `clap` for CLI argument parsing
+    let standalone_config = StandaloneConfig::new().with_parameters(json!({
+        "device": {
+            "physical": "/dev/video0",
+            "priority": "normal",
+            "sim": "robot.mp4"
+        },
+        "video": {
+            "encoding": "rgb8",
+            "frame_rate": 30,
+            "resolution": {
+                "width": 640,
+                "height": 480
+            }
+        }
+    }));
+
+    NodeBuilder::new()
+        // Fallback configuration for standalone execution (e.g., `cargo run`). 
+        // Ignored when the node is launched by the peppy daemon, which provides its own parameters.
+        .standalone(standalone_config)
+        .run(|args: Parameters, node_runner| async move {
         let video_params = args.video.clone();
+
+        println!(
+            "[uvc_camera] Video params: {}x{} @ {} fps, encoding: {}",
+            video_params.resolution.width,
+            video_params.resolution.height,
+            video_params.frame_rate,
+            video_params.encoding
+        );
 
         // Validate encoding before spawning - this node outputs RGB24 format data
         let encoding = &video_params.encoding;
