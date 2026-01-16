@@ -1,5 +1,5 @@
-use peppygen::subscribed_actions::my_action_robot_controller_move_left_arm as left_arm;
-use peppygen::subscribed_actions::my_action_robot_controller_move_right_arm as right_arm;
+use peppygen::subscribed_actions::openarm01_controller_move_left_arm as left_arm;
+use peppygen::subscribed_actions::openarm01_controller_move_right_arm as right_arm;
 use peppygen::subscribed_topics::uvc_camera_video_stream as video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
 use std::sync::Arc;
@@ -24,9 +24,9 @@ async fn ai_process(node_runner: Arc<NodeRunner>) {
 
         // Process the frame and generate fake arm positions
         let fake_position = [
-            frame.image[0] as i32,
-            frame.image[1] as i32,
-            frame.image[2] as i32,
+            frame.frame[0] as i32,
+            frame.frame[1] as i32,
+            frame.frame[2] as i32,
         ];
         println!("[brain] Generated arm position: {:?}", fake_position);
 
