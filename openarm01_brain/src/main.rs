@@ -47,12 +47,14 @@ async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToke
             desired_position: fake_position,
         };
 
-        let timeout = Duration::from_secs(5);
+        let goal_timeout = Duration::from_secs(5);
+        let result_timeout = Duration::from_secs(10);
 
-        let (left_result, right_result) = tokio::join!(
+        // Fire goals to both arms concurrently
+        let (left_goal_result, right_goal_result) = tokio::join!(
             left_arm::fire_goal(
                 &node_runner,
-                timeout,
+                goal_timeout,
                 None,
                 None,
                 left_goal,
@@ -60,7 +62,7 @@ async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToke
             ),
             right_arm::fire_goal(
                 &node_runner,
-                timeout,
+                goal_timeout,
                 None,
                 None,
                 right_goal,
@@ -68,15 +70,82 @@ async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToke
             ),
         );
 
-        if let Err(e) = left_result {
-            eprintln!("Failed to fire left arm goal: {e}");
-        } else {
-            println!("[brain] Left arm goal completed successfully");
-        }
-        if let Err(e) = right_result {
-            eprintln!("Failed to fire right arm goal: {e}");
-        } else {
-            println!("[brain] Right arm goal completed successfully");
+        // Get the action handles from accepted goals
+        let left_handle = match left_goal_result {
+            Ok(response) if response.data.accepted => {
+                println!("[brain] Left arm goal accepted");
+                Some(response.action_handle)
+            }
+            Ok(_) => {
+                eprintln!("[brain] Left arm goal rejected");
+                None
+            }
+            Err(e) => {
+                eprintln!("Failed to fire left arm goal: {e}");
+                None
+            }
+        };
+
+        let right_handle = match right_goal_result {
+            Ok(response) if response.data.accepted => {
+                println!("[brain] Right arm goal accepted");
+                Some(response.action_handle)
+            }
+            Ok(_) => {
+                eprintln!("[brain] Right arm goal rejected");
+                None
+            }
+            Err(e) => {
+                eprintln!("Failed to fire right arm goal: {e}");
+                None
+            }
+        };
+
+        // Wait for results from both arms concurrently (only if goals were accepted)
+        match (left_handle, right_handle) {
+            (Some(left_h), Some(right_h)) => {
+                let (left_result, right_result) = tokio::join!(
+                    left_arm::get_result(&node_runner, &left_h, result_timeout),
+                    right_arm::get_result(&node_runner, &right_h, result_timeout),
+                );
+
+                match left_result {
+                    Ok(result) => println!(
+                        "[brain] Left arm completed at position: {:?}",
+                        result.data.final_position
+                    ),
+                    Err(e) => eprintln!("[brain] Failed to get left arm result: {e}"),
+                }
+
+                match right_result {
+                    Ok(result) => println!(
+                        "[brain] Right arm completed at position: {:?}",
+                        result.data.final_position
+                    ),
+                    Err(e) => eprintln!("[brain] Failed to get right arm result: {e}"),
+                }
+            }
+            (Some(left_h), None) => {
+                match left_arm::get_result(&node_runner, &left_h, result_timeout).await {
+                    Ok(result) => println!(
+                        "[brain] Left arm completed at position: {:?}",
+                        result.data.final_position
+                    ),
+                    Err(e) => eprintln!("[brain] Failed to get left arm result: {e}"),
+                }
+            }
+            (None, Some(right_h)) => {
+                match right_arm::get_result(&node_runner, &right_h, result_timeout).await {
+                    Ok(result) => println!(
+                        "[brain] Right arm completed at position: {:?}",
+                        result.data.final_position
+                    ),
+                    Err(e) => eprintln!("[brain] Failed to get right arm result: {e}"),
+                }
+            }
+            (None, None) => {
+                eprintln!("[brain] Both arm goals failed, skipping result wait");
+            }
         }
     }
 }

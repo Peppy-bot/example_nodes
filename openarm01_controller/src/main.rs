@@ -79,14 +79,28 @@ async fn run_left_arm_action(
             }
         };
 
-        let handled = action
-            .handle_result_next_request(move |_request| {
+        // Use timeout to avoid blocking forever if client doesn't request result
+        let result_timeout = Duration::from_secs(10);
+        match tokio::time::timeout(
+            result_timeout,
+            action.handle_result_next_request(move |_request| {
                 Ok(move_left_arm::ResultResponse::new(final_position))
-            })
-            .await?;
-
-        if !handled {
-            break;
+            }),
+        )
+        .await
+        {
+            Ok(Ok(true)) => {} // Result was requested and handled
+            Ok(Ok(false)) => {
+                println!("[controller] Left arm action handle closed");
+                break;
+            }
+            Ok(Err(e)) => {
+                eprintln!("[controller] Left arm result request error: {e}");
+                break;
+            }
+            Err(_) => {
+                println!("[controller] Left arm result request timed out, continuing to next goal");
+            }
         }
     }
 
@@ -145,14 +159,30 @@ async fn run_right_arm_action(
             }
         };
 
-        let handled = action
-            .handle_result_next_request(move |_request| {
+        // Use timeout to avoid blocking forever if client doesn't request result
+        let result_timeout = Duration::from_secs(10);
+        match tokio::time::timeout(
+            result_timeout,
+            action.handle_result_next_request(move |_request| {
                 Ok(move_right_arm::ResultResponse::new(final_position))
-            })
-            .await?;
-
-        if !handled {
-            break;
+            }),
+        )
+        .await
+        {
+            Ok(Ok(true)) => {} // Result was requested and handled
+            Ok(Ok(false)) => {
+                println!("[controller] Right arm action handle closed");
+                break;
+            }
+            Ok(Err(e)) => {
+                eprintln!("[controller] Right arm result request error: {e}");
+                break;
+            }
+            Err(_) => {
+                println!(
+                    "[controller] Right arm result request timed out, continuing to next goal"
+                );
+            }
         }
     }
 
