@@ -2,7 +2,7 @@
 {
   schema_version: 1,
   manifest: {
-    name: "openarm01_robot_controller",
+    name: "openarm01_controller",
     tag: "0.1.0",
     labels: [
       "controller",

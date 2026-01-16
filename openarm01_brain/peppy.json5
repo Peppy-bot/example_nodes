@@ -1,7 +1,7 @@
 {
   schema_version: 1,
   manifest: {
-    name: "my_robot_brain",
+    name: "openarm01_brain",
     tag: "0.1.0",
     labels: [
       "brain"
@@ -41,13 +41,13 @@
       actions: [
         {
           id: "move_right_arm_action",
-          node: "my_action_robot_controller",
+          node: "openarm01_controller",
           name: "move_right_arm",
           tag: "0.1.0",
         },
         {
           id: "move_left_arm_action",
-          node: "my_action_robot_controller",
+          node: "openarm01_controller",
           name: "move_left_arm",
           tag: "0.1.0",
         }
