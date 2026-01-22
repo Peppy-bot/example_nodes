@@ -3,9 +3,12 @@ use ffmpeg::software::scaling::{Context as ScalerContext, Flags as ScalerFlags};
 use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
 use peppygen::exposed_topics::video_stream::{self, MessageHeader};
-use peppygen::parameters;
+use peppygen::parameters::{
+    self,
+    device::Device,
+    video::{Resolution, Video},
+};
 use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
-use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
@@ -15,21 +18,21 @@ fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
 
     // Example configuration; consider using `clap` for CLI argument parsing
-    let standalone_config = StandaloneConfig::new().with_parameters(json!({
-        "device": {
-            "physical": "/dev/video0",
-            "priority": "normal",
-            "sim": "robot.mp4"
+    let standalone_config = StandaloneConfig::new().with_parameters(&Parameters {
+        device: Device {
+            physical: "/dev/video0".to_string(),
+            priority: "normal".to_string(),
+            sim: "robot.mp4".to_string(),
         },
-        "video": {
-            "encoding": "rgb8",
-            "frame_rate": 30,
-            "resolution": {
-                "width": 640,
-                "height": 480
-            }
-        }
-    }));
+        video: Video {
+            encoding: "rgb8".to_string(),
+            frame_rate: 30,
+            resolution: Resolution {
+                width: 640,
+                height: 480,
+            },
+        },
+    });
 
     NodeBuilder::new()
         // Fallback configuration for standalone execution (e.g., `cargo run`). 
