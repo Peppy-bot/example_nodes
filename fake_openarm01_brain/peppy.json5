@@ -3,7 +3,7 @@
   manifest: {
     name: "fake_openarm01_brain",
     tag: "0.1.0",
-    toolchain: "rust",
+    language: "rust",
     labels: [
       "brain"
     ],
