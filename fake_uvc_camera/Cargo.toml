@@ -1,5 +1,5 @@
 [package]
-name = "uvc_camera"
+name = "fake_uvc_camera"
 version = "0.1.0"
 edition = "2024"
 
