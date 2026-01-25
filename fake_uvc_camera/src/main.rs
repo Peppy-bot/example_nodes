@@ -2,6 +2,7 @@ use ffmpeg::format::Pixel;
 use ffmpeg::software::scaling::{Context as ScalerContext, Flags as ScalerFlags};
 use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
+use peppygen::exposed_services::get_camera_info;
 use peppygen::exposed_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters::{
     self,
@@ -57,6 +58,13 @@ fn main() -> Result<()> {
                 encoding
             );
         }
+
+        // Service to expose camera info
+        let service_node_runner = Arc::clone(&node_runner);
+        let service_video_params = video_params.clone();
+        tokio::spawn(async move {
+            run_camera_info_service(service_node_runner, service_video_params).await;
+        });
 
         // Long running tasks should always be spawned in a different thread
         let cancel_token = node_runner.cancellation_token().clone();
@@ -193,5 +201,26 @@ async fn run_video_loop(
 
         // Loop restarts - video will be reopened from the beginning
         println!("[uvc_camera] Video ended, restarting from beginning...");
+    }
+}
+
+async fn run_camera_info_service(
+    node_runner: Arc<peppygen::NodeRunner>,
+    video_params: parameters::video::Video,
+) {
+    loop {
+        let params = video_params.clone();
+        if let Err(e) = get_camera_info::handle_next_request(&node_runner, move |_request| {
+            Ok(get_camera_info::Response::new(
+                params.resolution.width as u32,
+                params.resolution.height as u32,
+                params.frame_rate as u8,
+                params.encoding.clone(),
+            ))
+        })
+        .await
+        {
+            tracing::error!("get_camera_info service error: {e:?}");
+        }
     }
 }
