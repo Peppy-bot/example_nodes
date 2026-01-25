@@ -63,7 +63,7 @@ fn main() -> Result<()> {
         let service_node_runner = Arc::clone(&node_runner);
         let service_video_params = video_params.clone();
         tokio::spawn(async move {
-            run_camera_info_service(service_node_runner, service_video_params).await;
+            listen_for_video_stream_info_requests(service_node_runner, service_video_params).await;
         });
 
         // Long running tasks should always be spawned in a different thread
@@ -204,7 +204,7 @@ async fn run_video_loop(
     }
 }
 
-async fn run_camera_info_service(
+async fn listen_for_video_stream_info_requests(
     node_runner: Arc<peppygen::NodeRunner>,
     video_params: parameters::video::Video,
 ) {
