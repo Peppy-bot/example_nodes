@@ -30,16 +30,16 @@
       topics: [
         {
           id: "camera_front",
-          node: "uvc_camera",
+          node: "fake_uvc_camera",
           name: "video_stream",
           tag: "0.1.0",
         }
       ],
       services: [
         {
-          id: "camera_enable",
-          node: "uvc_camera",
-          name: "enable_camera",
+          id: "video_info",
+          node: "fake_uvc_camera",
+          name: "video_stream_info",
           tag: "0.1.0",
         }
       ],
@@ -47,13 +47,13 @@
       actions: [
         {
           id: "move_right_arm_action",
-          node: "openarm01_controller",
+          node: "fake_openarm01_controller",
           name: "move_right_arm",
           tag: "0.1.0",
         },
         {
           id: "move_left_arm_action",
-          node: "openarm01_controller",
+          node: "fake_openarm01_controller",
           name: "move_left_arm",
           tag: "0.1.0",
         }

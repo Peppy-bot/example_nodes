@@ -2,7 +2,7 @@ use ffmpeg::format::Pixel;
 use ffmpeg::software::scaling::{Context as ScalerContext, Flags as ScalerFlags};
 use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
-use peppygen::exposed_services::get_camera_info;
+use peppygen::exposed_services::video_stream_info;
 use peppygen::exposed_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters::{
     self,
@@ -210,8 +210,8 @@ async fn run_camera_info_service(
 ) {
     loop {
         let params = video_params.clone();
-        if let Err(e) = get_camera_info::handle_next_request(&node_runner, move |_request| {
-            Ok(get_camera_info::Response::new(
+        if let Err(e) = video_stream_info::handle_next_request(&node_runner, move |_request| {
+            Ok(video_stream_info::Response::new(
                 params.resolution.width as u32,
                 params.resolution.height as u32,
                 params.frame_rate as u8,

@@ -20,6 +20,7 @@
       "--release"
     ]
   },
+  // Those are fake parameters supposed to emulate a real camera
   parameters: {
     device: {
       physical: "string",
@@ -59,7 +60,7 @@
       ],
       services: [
         {
-          name: "get_camera_info",
+          name: "video_stream_info",
           response_message_format: {
             width: "u32",
             height: "u32",
@@ -68,11 +69,6 @@
           },
         },
       ],
-    },
-    subscribes_to: {
-      topics: [],
-      services: [],
-      actions: [],
-    },
+    }
   }
 }
