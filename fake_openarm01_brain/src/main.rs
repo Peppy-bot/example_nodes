@@ -1,6 +1,6 @@
-use peppygen::subscribed_actions::openarm01_controller_move_left_arm as left_arm;
-use peppygen::subscribed_actions::openarm01_controller_move_right_arm as right_arm;
-use peppygen::subscribed_topics::uvc_camera_video_stream as video_stream;
+use peppygen::subscribed_actions::fake_openarm01_controller_move_left_arm as left_arm;
+use peppygen::subscribed_actions::fake_openarm01_controller_move_right_arm as right_arm;
+use peppygen::subscribed_topics::fake_uvc_camera_video_stream as video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
 use std::sync::Arc;
 use std::time::Duration;
