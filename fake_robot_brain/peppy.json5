@@ -1,7 +1,8 @@
 {
   schema_version: 1,
   manifest: {
-    name: "fake_openarm01_brain",
+    // This is a brain that can plug to any controller
+    name: "fake_robot_brain",
     tag: "0.1.0",
     language: "rust",
     labels: [

@@ -1,5 +1,5 @@
 [package]
-name = "fake_openarm01_brain"
+name = "fake_robot_brain"
 version = "0.1.0"
 edition = "2024"
 

@@ -1,4 +1,4 @@
-// A simple node that receives commands from a brain/a controller or teleop and control the joints of a particular model of robot
+// A simple node that receives commands from a brain/a game controller or teleop and control the joints of a particular model of robot
 {
   schema_version: 1,
   manifest: {
