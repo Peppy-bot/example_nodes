@@ -15,8 +15,38 @@ use std::sync::Arc;
 use std::time::{Instant, SystemTime};
 use tokio_util::sync::CancellationToken;
 
+fn get_source_video_fps(video_path: &PathBuf) -> u8 {
+    let input = ffmpeg::format::input(video_path).unwrap_or_else(|e| {
+        panic!("Failed to open video file '{}': {e}", video_path.display())
+    });
+
+    let video_stream = input
+        .streams()
+        .best(ffmpeg::media::Type::Video)
+        .expect("No video stream found");
+
+    let source_fps = video_stream.avg_frame_rate();
+    if source_fps.numerator() > 0 && source_fps.denominator() > 0 {
+        (source_fps.numerator() as f64 / source_fps.denominator() as f64).round() as u8
+    } else {
+        30 // Default fallback
+    }
+}
+
 fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
+
+    // Probe source video to get its actual frame rate
+    let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
+        .iter()
+        .collect();
+
+    if !video_path.exists() {
+        panic!("Video file not found: {}", video_path.display());
+    }
+
+    let source_fps = get_source_video_fps(&video_path);
+    println!("[uvc_camera] Detected source video frame rate: {} fps", source_fps);
 
     // Example configuration; consider using `clap` for CLI argument parsing
     let standalone_config = StandaloneConfig::new().with_parameters(&Parameters {
@@ -27,7 +57,7 @@ fn main() -> Result<()> {
         },
         video: Video {
             encoding: "rgb8".to_string(),
-            frame_rate: 30,
+            frame_rate: source_fps as u16,
             resolution: Resolution {
                 width: 640,
                 height: 480,
@@ -36,10 +66,10 @@ fn main() -> Result<()> {
     });
 
     NodeBuilder::new()
-        // Fallback configuration for standalone execution (e.g., `cargo run`). 
+        // Fallback configuration for standalone execution (e.g., `cargo run`).
         // Ignored when the node is launched by the peppy daemon, which provides its own parameters.
         .standalone(standalone_config)
-        .run(|args: Parameters, node_runner| async move {
+        .run(move |args: Parameters, node_runner| async move {
         let video_params = args.video.clone();
 
         println!(
@@ -59,11 +89,12 @@ fn main() -> Result<()> {
             );
         }
 
-        // Service to expose camera info
+        // Service to expose camera info - use the actual source fps
         let service_node_runner = Arc::clone(&node_runner);
         let service_video_params = video_params.clone();
+        let actual_fps = source_fps;
         tokio::spawn(async move {
-            listen_for_video_stream_info_requests(service_node_runner, service_video_params).await;
+            listen_for_video_stream_info_requests(service_node_runner, service_video_params, actual_fps).await;
         });
 
         // Long running tasks should always be spawned in a different thread
@@ -207,14 +238,16 @@ async fn run_video_loop(
 async fn listen_for_video_stream_info_requests(
     node_runner: Arc<peppygen::NodeRunner>,
     video_params: parameters::video::Video,
+    actual_fps: u8,
 ) {
     loop {
         let params = video_params.clone();
+        let fps = actual_fps;
         if let Err(e) = video_stream_info::handle_next_request(&node_runner, move |_request| {
             Ok(video_stream_info::Response::new(
                 params.resolution.width as u32,
                 params.resolution.height as u32,
-                params.frame_rate as u8,
+                fps,
                 params.encoding.clone(),
             ))
         })
