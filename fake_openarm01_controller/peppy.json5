@@ -100,10 +100,5 @@
         }
       ],
     },
-    subscribes_to: {
-      topics: [],
-      services: [],
-      actions: [],
-    },
   }
 }
