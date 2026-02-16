@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 
-from peppygen import NodeBuilder, NodeRunner
+from peppygen import NodeBuilder, NodeRunner, StandaloneConfig
 from peppygen.exposed_services import video_stream_info
 from peppygen.exposed_topics import video_stream
 from peppygen.exposed_topics.video_stream import MessageHeader
@@ -119,7 +119,30 @@ async def listen_for_video_stream_info_requests(
 
 
 def main():
-    NodeBuilder().run(setup)
+    video_path = ASSETS_DIR / "robot.mp4"
+    source_fps = get_source_video_fps(video_path) if video_path.exists() else 30
+
+    # Fallback configuration for standalone execution (e.g., `uv run`).
+    # Ignored when the node is launched by the peppy daemon, which provides its own parameters.
+    standalone_config = StandaloneConfig().with_parameters(
+        {
+            "device": {
+                "physical": "/dev/video0",
+                "priority": "normal",
+                "sim": "gstreamer:mujoco_cam",
+            },
+            "video": {
+                "encoding": "rgb8",
+                "frame_rate": source_fps,
+                "resolution": {
+                    "width": 640,
+                    "height": 480,
+                },
+            },
+        }
+    )
+
+    NodeBuilder().standalone(standalone_config).run(setup)
 
 
 if __name__ == "__main__":
