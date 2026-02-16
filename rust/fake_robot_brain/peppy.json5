@@ -33,8 +33,7 @@
           id: "camera_stream",
           node: "fake_uvc_camera",
           name: "video_stream",
-          tag: "0.1.0",
-          integrity: "c036900c2f8e375cf97cd5c12b5642ae97ee4d0aed61ae44e7a38a4e0b1bbc2a",
+          tag: "0.1.0"
         }
       ],
       services: [
@@ -42,8 +41,7 @@
           id: "video_info",
           node: "fake_uvc_camera",
           name: "video_stream_info",
-          tag: "0.1.0",
-          integrity: "3e61eb1eccfb7ee6fe48005558807e267bcce444bea5384897c86d1c900ec28e",
+          tag: "0.1.0"
         }
       ],
       // And emit actions for the controller to take
@@ -52,15 +50,13 @@
           id: "move_right_arm_action",
           node: "fake_openarm01_controller",
           name: "move_right_arm",
-          tag: "0.1.0",
-          integrity: "8b548d2a83a2ac4cbb5d2fa42bb158cdd2c1db017b2046107186420c7eb14283",
+          tag: "0.1.0"
         },
         {
           id: "move_left_arm_action",
           node: "fake_openarm01_controller",
           name: "move_left_arm",
-          tag: "0.1.0",
-          integrity: "30a533a540f33115afe48f2d6e2cd9f42327364f5779f36c09075eab0743d4d1",
+          tag: "0.1.0"
         }
       ]
     },
