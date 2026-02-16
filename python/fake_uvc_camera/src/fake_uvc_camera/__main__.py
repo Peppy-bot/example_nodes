@@ -23,7 +23,7 @@ def get_source_video_fps(video_path: Path) -> int:
     return 30  # Default fallback
 
 
-async def setup(params: Parameters, node_runner: NodeRunner):
+async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
     video_params = params.video
 
     print(
@@ -47,13 +47,14 @@ async def setup(params: Parameters, node_runner: NodeRunner):
     actual_fps = get_source_video_fps(video_path)
     print(f"[uvc_camera] Detected source video frame rate: {actual_fps} fps")
 
-    # Service to expose camera info
-    asyncio.create_task(
-        listen_for_video_stream_info_requests(node_runner, video_params, actual_fps)
-    )
-
-    # Video loop
-    asyncio.create_task(run_video_loop(node_runner, video_params))
+    return [
+        # Service to expose camera info
+        asyncio.create_task(
+            listen_for_video_stream_info_requests(node_runner, video_params, actual_fps)
+        ),
+        # Video loop
+        asyncio.create_task(run_video_loop(node_runner, video_params)),
+    ]
 
 
 async def run_video_loop(node_runner: NodeRunner, video_params):

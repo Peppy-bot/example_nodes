@@ -6,9 +6,11 @@ from peppygen.exposed_actions import move_left_arm, move_right_arm
 from peppygen.parameters import Parameters
 
 
-async def setup(params: Parameters, node_runner: NodeRunner):
-    asyncio.create_task(_run_arm_action_safe(node_runner, "Left", move_left_arm))
-    asyncio.create_task(_run_arm_action_safe(node_runner, "Right", move_right_arm))
+async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
+    return [
+        asyncio.create_task(_run_arm_action_safe(node_runner, "Left", move_left_arm)),
+        asyncio.create_task(_run_arm_action_safe(node_runner, "Right", move_right_arm)),
+    ]
 
 
 async def _run_arm_action_safe(node_runner, side, arm_module):

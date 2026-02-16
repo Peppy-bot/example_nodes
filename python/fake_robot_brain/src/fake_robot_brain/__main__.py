@@ -109,8 +109,8 @@ async def ai_process(node_runner: NodeRunner):
             print("[brain] Both arm goals failed, skipping result wait")
 
 
-async def setup(params: Parameters, node_runner: NodeRunner):
-    asyncio.create_task(ai_process(node_runner))
+async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
+    return [asyncio.create_task(ai_process(node_runner))]
 
 
 def main():

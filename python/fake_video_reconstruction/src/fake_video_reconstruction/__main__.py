@@ -11,9 +11,9 @@ from peppygen.subscribed_services import fake_uvc_camera_video_stream_info
 from peppygen.subscribed_topics import fake_uvc_camera_video_stream
 
 
-async def setup(params: Parameters, node_runner: NodeRunner):
+async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
     video_duration_seconds = params.video_duration_seconds
-    asyncio.create_task(record_video(node_runner, video_duration_seconds))
+    return [asyncio.create_task(record_video(node_runner, video_duration_seconds))]
 
 
 async def record_video(node_runner: NodeRunner, video_duration_seconds: int):
