@@ -10,7 +10,7 @@ from peppygen.exposed_topics import video_stream
 from peppygen.exposed_topics.video_stream import MessageHeader
 from peppygen.parameters import Parameters
 
-ASSETS_DIR = Path(__file__).resolve().parent.parent.parent.parent / "assets"
+ASSETS_DIR = Path(__file__).resolve().parent.parent.parent / "assets"
 
 
 def get_source_video_fps(video_path: Path) -> int:

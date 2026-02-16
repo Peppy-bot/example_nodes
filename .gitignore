@@ -33,8 +33,5 @@ __pycache__/
 *.whl
 .venv/
 
-# uv
-uv.lock
-
 # Peppy stuff, anywhere
 .peppy
