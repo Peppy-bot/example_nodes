@@ -1,0 +1,41 @@
+{
+  schema_version: 1,
+  manifest: {
+    name: "fake_video_reconstruction",
+    tag: "0.1.0",
+    language: "python",
+    add_cmd: [
+      "uv",
+      "sync"
+    ],
+    start_cmd: [
+      "uv",
+      "run",
+      "fake_video_reconstruction"
+    ]
+  },
+  parameters: {
+    // How long do you want the reconstruction to be?
+    video_duration_seconds: "u32"
+  },
+  interfaces: {
+    subscribes_to: {
+      topics: [
+        {
+          id: "camera_stream",
+          node: "fake_uvc_camera",
+          tag: "0.1.0",
+          name: "video_stream"
+        },
+      ],
+      services: [
+        {
+          id: "camera_info",
+          node: "fake_uvc_camera",
+          tag: "0.1.0",
+          name: "video_stream_info"
+        },
+      ]
+    },
+  }
+}

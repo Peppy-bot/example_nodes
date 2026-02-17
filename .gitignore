@@ -25,5 +25,13 @@ target
 
 .DS_Store
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+*.whl
+.venv/
+
 # Peppy stuff, anywhere
 .peppy

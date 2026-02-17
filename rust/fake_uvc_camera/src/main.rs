@@ -7,7 +7,7 @@ use peppygen::exposed_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters::{
     self,
     device::Device,
-    video::{Resolution, Video},
+    video::{Video, VideoResolution},
 };
 use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
 use std::path::PathBuf;
@@ -16,9 +16,8 @@ use std::time::{Instant, SystemTime};
 use tokio_util::sync::CancellationToken;
 
 fn get_source_video_fps(video_path: &PathBuf) -> u8 {
-    let input = ffmpeg::format::input(video_path).unwrap_or_else(|e| {
-        panic!("Failed to open video file '{}': {e}", video_path.display())
-    });
+    let input = ffmpeg::format::input(video_path)
+        .unwrap_or_else(|e| panic!("Failed to open video file '{}': {e}", video_path.display()));
 
     let video_stream = input
         .streams()
@@ -46,7 +45,10 @@ fn main() -> Result<()> {
     }
 
     let source_fps = get_source_video_fps(&video_path);
-    println!("[uvc_camera] Detected source video frame rate: {} fps", source_fps);
+    println!(
+        "[uvc_camera] Detected source video frame rate: {} fps",
+        source_fps
+    );
 
     // Example configuration; consider using `clap` for CLI argument parsing
     let standalone_config = StandaloneConfig::new().with_parameters(&Parameters {
@@ -58,7 +60,7 @@ fn main() -> Result<()> {
         video: Video {
             encoding: "rgb8".to_string(),
             frame_rate: source_fps as u16,
-            resolution: Resolution {
+            resolution: VideoResolution {
                 width: 640,
                 height: 480,
             },
