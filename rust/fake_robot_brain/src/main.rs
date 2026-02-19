@@ -4,7 +4,7 @@ use peppygen::subscribed_topics::fake_uvc_camera_video_stream as video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio_util::sync::CancellationToken;
+use peppylib::runtime::CancellationToken;
 
 async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToken) {
     println!("[brain] AI process started, waiting for video frames...");

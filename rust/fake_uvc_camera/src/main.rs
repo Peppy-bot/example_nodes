@@ -13,7 +13,7 @@ use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
-use tokio_util::sync::CancellationToken;
+use peppylib::runtime::CancellationToken;
 
 fn get_source_video_fps(video_path: &PathBuf) -> u8 {
     let input = ffmpeg::format::input(video_path)
