@@ -3,7 +3,7 @@ use peppygen::{NodeBuilder, Parameters, Result};
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio_util::sync::CancellationToken;
+use peppylib::runtime::CancellationToken;
 
 #[derive(Debug, Clone, Copy)]
 enum ActionOutcome {
