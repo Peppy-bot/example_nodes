@@ -14,9 +14,7 @@
       "--release"
     ],
     start_cmd: [
-      "cargo",
-      "run",
-      "--release"
+      "./target/release/fake_robot_brain"
     ]
   },
   parameters: {},

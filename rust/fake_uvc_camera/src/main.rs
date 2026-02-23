@@ -10,10 +10,10 @@ use peppygen::parameters::{
     video::{Video, VideoResolution},
 };
 use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
+use peppylib::runtime::CancellationToken;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Instant, SystemTime};
-use peppylib::runtime::CancellationToken;
 
 fn get_source_video_fps(video_path: &PathBuf) -> u8 {
     let input = ffmpeg::format::input(video_path)
@@ -36,9 +36,10 @@ fn main() -> Result<()> {
     ffmpeg::init().expect("Failed to initialize FFmpeg");
 
     // Probe source video to get its actual frame rate
-    let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
-        .iter()
-        .collect();
+    let video_path = std::env::current_dir()
+        .expect("Failed to get current working directory")
+        .join("assets")
+        .join("robot.mp4");
 
     if !video_path.exists() {
         panic!("Video file not found: {}", video_path.display());
@@ -117,9 +118,10 @@ async fn run_video_loop(
     cancel_token: CancellationToken,
 ) -> Result<()> {
     println!("[uvc_camera] Starting video loop...");
-    let video_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "assets", "robot.mp4"]
-        .iter()
-        .collect();
+    let video_path = std::env::current_dir()
+        .expect("Failed to get current working directory")
+        .join("assets")
+        .join("robot.mp4");
 
     if !video_path.exists() {
         panic!("Video file not found: {}", video_path.display());

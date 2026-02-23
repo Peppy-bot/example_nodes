@@ -10,9 +10,7 @@
       "--release"
     ],
     start_cmd: [
-      "cargo",
-      "run",
-      "--release"
+      "./target/release/fake_video_reconstruction"
     ]
   },
   parameters: {
@@ -27,7 +25,6 @@
           node: "fake_uvc_camera",
           tag: "0.1.0",
           name: "video_stream",
-          integrity: "sha256:c036900c2f8e375cf97cd5c12b5642ae97ee4d0aed61ae44e7a38a4e0b1bbc2a"
         },
       ],
       services: [
@@ -36,7 +33,6 @@
           node: "fake_uvc_camera",
           tag: "0.1.0",
           name: "video_stream_info",
-          integrity: "3e61eb1eccfb7ee6fe48005558807e267bcce444bea5384897c86d1c900ec28e"
         },
       ]
     },

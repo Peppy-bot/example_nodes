@@ -15,9 +15,7 @@
       "--release"
     ],
     start_cmd: [
-      "cargo",
-      "run",
-      "--release"
+      "./target/release/fake_openarm01_controller"
     ]
   },
   parameters: {},
