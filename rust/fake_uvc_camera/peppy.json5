@@ -14,7 +14,9 @@
       "build",
       "--release"
     ],
-    start_cmd: ["./target/release/fake_uvc_camera"]
+    start_cmd: [
+      "./target/release/fake_uvc_camera"
+    ]
   },
   // Those are fake parameters supposed to emulate a real camera
   parameters: {
