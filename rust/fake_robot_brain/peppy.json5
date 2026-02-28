@@ -8,6 +8,8 @@
     labels: [
       "brain"
     ],
+  },
+  process: {
     add_cmd: [
       "cargo",
       "build",

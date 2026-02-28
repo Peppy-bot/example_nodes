@@ -4,6 +4,8 @@
     name: "fake_video_reconstruction",
     tag: "0.1.0",
     language: "rust",
+  },
+  process: {
     add_cmd: [
       "cargo",
       "build",
