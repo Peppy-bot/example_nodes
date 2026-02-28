@@ -9,14 +9,9 @@
       "camera",
       "usb",
     ],
-    add_cmd: [
-      "cargo",
-      "build",
-      "--release"
-    ],
-    start_cmd: [
-      "./target/release/fake_uvc_camera"
-    ]
+  },
+  container: {
+    def_file: "apptainer.def"
   },
   // Those are fake parameters supposed to emulate a real camera
   parameters: {
