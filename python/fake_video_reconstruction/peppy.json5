@@ -3,17 +3,10 @@
   manifest: {
     name: "fake_video_reconstruction",
     tag: "0.1.0",
-    language: "python",
-    add_cmd: [
-      "uv",
-      "sync",
-      "--no-editable"
-    ],
-    start_cmd: [
-      "./.venv/bin/python",
-      "-m",
-      "fake_video_reconstruction"
-    ]
+    language: "python"
+  },
+  container: {
+    def_file: "apptainer.def"
   },
   parameters: {
     // How long do you want the reconstruction to be?

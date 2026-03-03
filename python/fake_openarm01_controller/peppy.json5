@@ -3,7 +3,9 @@
   manifest: {
     name: "fake_openarm01_controller",
     tag: "0.1.0",
-    language: "python",
+    language: "python"
+  },
+  process: {
     add_cmd: [
       "uv",
       "sync",
