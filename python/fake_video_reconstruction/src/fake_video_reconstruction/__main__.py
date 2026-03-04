@@ -1,5 +1,4 @@
 import asyncio
-import tempfile
 from pathlib import Path
 
 import av
@@ -66,8 +65,9 @@ async def record_video(node_runner: NodeRunner, video_duration_seconds: int):
 
 
 def encode_video(frames: list[bytes], width: int, height: int, fps: int) -> str:
-    temp_dir = tempfile.mkdtemp()
-    output_path = str(Path(temp_dir) / "reconstructed_video.mp4")
+    output_dir = Path("/tmp/video_reconstruction")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = str(output_dir / "reconstructed_video.mp4")
 
     container = av.open(output_path, mode="w")
     stream = container.add_stream("h264", rate=fps)
