@@ -6,6 +6,7 @@ From: ubuntu:24.04
     Version 0.1.0
 
 %environment
+    export DEBIAN_FRONTEND=noninteractive
     export PATH="/opt/fake_video_reconstruction/.venv/bin:$PATH"
 
 %files
