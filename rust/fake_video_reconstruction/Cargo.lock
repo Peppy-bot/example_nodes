@@ -884,7 +884,6 @@ dependencies = [
  "ffmpeg-next",
  "peppygen",
  "peppylib",
- "tempfile",
  "tokio",
  "tracing",
 ]

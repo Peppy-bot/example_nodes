@@ -3,16 +3,13 @@
   manifest: {
     name: "fake_video_reconstruction",
     tag: "0.1.0",
-    language: "python",
-    add_cmd: [
-      "uv",
-      "sync",
-      "--no-editable"
-    ],
-    start_cmd: [
-      "./.venv/bin/python",
-      "-m",
-      "fake_video_reconstruction"
+    language: "python"
+  },
+  container: {
+    def_file: "apptainer.def",
+    mount_paths: [
+      // host_path:container_path:options
+      "/tmp/video_reconstruction:/tmp/video_reconstruction:rw"
     ]
   },
   parameters: {

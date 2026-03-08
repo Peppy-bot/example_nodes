@@ -8,7 +8,9 @@
     labels: [
       "controller",
       "openarm"
-    ],
+    ]
+  },
+  process: {
     add_cmd: [
       "cargo",
       "build",
