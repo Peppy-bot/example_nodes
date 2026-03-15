@@ -2,9 +2,9 @@ use peppygen::consumed_actions::openarm01_controller_move_left_arm as left_arm;
 use peppygen::consumed_actions::openarm01_controller_move_right_arm as right_arm;
 use peppygen::consumed_topics::camera_stream_video_stream as video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, QoSProfile, Result};
+use peppylib::runtime::CancellationToken;
 use std::sync::Arc;
 use std::time::Duration;
-use peppylib::runtime::CancellationToken;
 
 async fn ai_process(node_runner: Arc<NodeRunner>, cancel_token: CancellationToken) {
     println!("[brain] AI process started, waiting for video frames...");
