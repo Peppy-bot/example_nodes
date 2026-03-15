@@ -8,7 +8,16 @@
     labels: [
       "controller",
       "openarm"
-    ]
+    ],
+    depends_on: {
+      nodes: [
+        {
+          name: "fake_openarm01_arm",
+          tag: "0.1.0",
+          local_id: "robot_arm"
+        }
+      ]
+    },
   },
   process: {
     add_cmd: [
@@ -22,6 +31,28 @@
   },
   parameters: {},
   interfaces: {
+    topics: {
+      emits: [
+        {
+          name: "joint_commands",
+          qos_profile: "reliable",
+          message_format: {
+            target_positions: {
+              $type: "array",
+              $items: "f64",
+              $length: 3
+            },
+            max_velocity: "f64"
+          }
+        }
+      ],
+      consumes: [
+        {
+          local_node_id: "robot_arm", // Linked — references depends_on
+          name: "joint_states",
+        },
+      ],
+    },
     actions: {
       exposes: [
         {
