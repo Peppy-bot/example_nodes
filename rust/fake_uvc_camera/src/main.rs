@@ -2,11 +2,10 @@ use ffmpeg::format::Pixel;
 use ffmpeg::software::scaling::{Context as ScalerContext, Flags as ScalerFlags};
 use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
-use peppygen::exposed_services::video_stream_info;
 use peppygen::emitted_topics::video_stream::{self, MessageHeader};
+use peppygen::exposed_services::video_stream_info;
 use peppygen::parameters::{
     self,
-    device::Device,
     video::{Video, VideoResolution},
 };
 use peppygen::{NodeBuilder, Parameters, Result, StandaloneConfig};
@@ -53,11 +52,7 @@ fn main() -> Result<()> {
 
     // Example configuration; consider using `clap` for CLI argument parsing
     let standalone_config = StandaloneConfig::new().with_parameters(&Parameters {
-        device: Device {
-            physical: "/dev/video0".to_string(),
-            priority: "normal".to_string(),
-            sim: "robot.mp4".to_string(),
-        },
+        device_path: "/dev/video0".to_string(),
         video: Video {
             encoding: "rgb8".to_string(),
             frame_rate: source_fps as u16,

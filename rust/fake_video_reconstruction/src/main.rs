@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use peppygen::consumed_services::camera_stream_video_stream_info;
-use peppygen::expected_topics::camera_stream_video_stream;
+use peppygen::consumed_topics::camera_stream_video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, Result};
 
 use ffmpeg_next::Rational;
@@ -57,8 +57,7 @@ async fn record_video(node_runner: Arc<NodeRunner>, video_duration_seconds: u32)
     let mut frames: Vec<Vec<u8>> = Vec::with_capacity(total_frames as usize);
 
     for frame_num in 0..total_frames {
-        match camera_stream_video_stream::on_next_message_received(&node_runner, None, None).await
-        {
+        match camera_stream_video_stream::on_next_message_received(&node_runner, None, None).await {
             Ok((_instance_id, message)) => {
                 frames.push(message.frame);
                 if (frame_num + 1) % camera_info.frames_per_second as u32 == 0 {
