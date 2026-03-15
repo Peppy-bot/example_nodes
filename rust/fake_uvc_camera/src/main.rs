@@ -3,7 +3,7 @@ use ffmpeg::software::scaling::{Context as ScalerContext, Flags as ScalerFlags};
 use ffmpeg::util::frame::video::Video as VideoFrame;
 use ffmpeg_next as ffmpeg;
 use peppygen::exposed_services::video_stream_info;
-use peppygen::exposed_topics::video_stream::{self, MessageHeader};
+use peppygen::emitted_topics::video_stream::{self, MessageHeader};
 use peppygen::parameters::{
     self,
     device::Device,

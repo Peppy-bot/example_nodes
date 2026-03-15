@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use peppygen::subscribed_services::fake_uvc_camera_video_stream_info;
-use peppygen::subscribed_topics::fake_uvc_camera_video_stream;
+use peppygen::consumed_services::camera_stream_video_stream_info;
+use peppygen::expected_topics::camera_stream_video_stream;
 use peppygen::{NodeBuilder, NodeRunner, Parameters, Result};
 
 use ffmpeg_next::Rational;
@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
 async fn record_video(node_runner: Arc<NodeRunner>, video_duration_seconds: u32) {
     let camera_info = loop {
-        let response = fake_uvc_camera_video_stream_info::poll(
+        let response = camera_stream_video_stream_info::poll(
             &node_runner,
             std::time::Duration::from_secs(5),
             None,
@@ -57,7 +57,7 @@ async fn record_video(node_runner: Arc<NodeRunner>, video_duration_seconds: u32)
     let mut frames: Vec<Vec<u8>> = Vec::with_capacity(total_frames as usize);
 
     for frame_num in 0..total_frames {
-        match fake_uvc_camera_video_stream::on_next_message_received(&node_runner, None, None).await
+        match camera_stream_video_stream::on_next_message_received(&node_runner, None, None).await
         {
             Ok((_instance_id, message)) => {
                 frames.push(message.frame);

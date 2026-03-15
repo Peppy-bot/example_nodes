@@ -22,10 +22,8 @@
   },
   parameters: {},
   interfaces: {
-    exposes: {
-      topics: [],
-      services: [],
-      actions: [
+    actions: {
+      exposes: [
         {
           name: "move_right_arm",
           goal_service: {
@@ -98,7 +96,7 @@
             }
           }
         }
-      ],
+      ]
     },
-  }
+  },
 }
