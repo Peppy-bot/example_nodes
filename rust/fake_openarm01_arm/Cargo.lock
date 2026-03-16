@@ -847,12 +847,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "fake_openarm01_controller"
+name = "fake_openarm01_arm"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "peppygen",
  "peppylib",
+ "serde",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 
