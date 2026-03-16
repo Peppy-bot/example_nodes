@@ -1,3 +1,5 @@
+use peppygen::consumed_topics::robot_arm_joint_states;
+use peppygen::emitted_topics::joint_commands;
 use peppygen::exposed_actions::{move_left_arm, move_right_arm};
 use peppygen::{NodeBuilder, Parameters, Result};
 use std::future::Future;
@@ -203,6 +205,12 @@ async fn run_arm_action<A: ArmAction>(
 
         let desired_position = A::goal_desired_position(&goal_request);
         println!("[controller] {side} arm received goal: {desired_position:?}");
+        let cmd_positions = desired_position.map(|v| v as f64);
+        if let Err(e) = joint_commands::emit(&node_runner, cmd_positions, 1.0).await {
+            eprintln!("[controller] {side} emit joint_commands error: {e:?}");
+        } else {
+            println!("[controller] {side} published joint_commands: target={cmd_positions:.3?} max_vel=1.0");
+        }
         let duration = choose_action_duration();
 
         let outcome =
@@ -321,8 +329,26 @@ fn main() -> Result<()> {
     NodeBuilder::<Parameters>::new().run(|_args, node_runner| async move {
         let left_runner = Arc::clone(&node_runner);
         let right_runner = Arc::clone(&node_runner);
+        let states_runner = Arc::clone(&node_runner);
         let left_cancel_token = node_runner.cancellation_token().clone();
         let right_cancel_token = node_runner.cancellation_token().clone();
+
+        tokio::spawn(async move {
+            loop {
+                match robot_arm_joint_states::on_next_message_received(&states_runner, None, None)
+                    .await
+                {
+                    Ok((_id, msg)) => println!(
+                        "[controller] joint_states update: positions={:.3?} velocities={:.3?}",
+                        msg.positions, msg.velocities
+                    ),
+                    Err(e) => {
+                        eprintln!("[controller] joint_states subscription closed: {e:?}");
+                        break;
+                    }
+                }
+            }
+        });
 
         tokio::spawn(async move {
             if let Err(error) = run_arm_action::<move_left_arm::ActionHandle>(
