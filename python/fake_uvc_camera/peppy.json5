@@ -4,6 +4,11 @@
     name: "fake_uvc_camera",
     tag: "0.1.0",
     language: "python",
+    labels: [
+      "uvc",
+      "camera",
+      "usb",
+    ],
   },
   container: {
     def_file: "apptainer.def"
@@ -21,8 +26,8 @@
     },
   },
   interfaces: {
-    exposes: {
-      topics: [
+    topics: {
+      emits: [
         {
           name: "video_stream",
           qos_profile: "sensor_data",
@@ -42,7 +47,9 @@
           },
         }
       ],
-      services: [
+    },
+    services: {
+      exposes: [
         {
           name: "video_stream_info",
           response_message_format: {

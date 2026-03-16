@@ -33,7 +33,6 @@
       "./target/release/fake_robot_brain"
     ]
   },
-  parameters: {},
   interfaces: {
     topics: {
       // The brain receives the inputs from the camera
