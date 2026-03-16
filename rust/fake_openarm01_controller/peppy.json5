@@ -48,6 +48,38 @@
       consumes: [
         {
           local_node_id: "robot_arm", // Linked — references depends_on
+          name: "joint_states",
+        },
+      ],
+    },
+    actions: {
+      exposes: [
+        {
+          name: "move_right_arm",
+          goal_service: {
+            request_message_format: {
+              arm_id: "u16",
+              // x, y, z
+              desired_position: {
+                $type: "array",
+                $items: "i32",
+                $length: 3
+              }
+            },
+            response_message_format: {
+              accepted: "bool"
+            }
+          },
+          feedback_topic: {
+            qos_profile: "standard",
+            message_format: {
+              current_position: {
+                $type: "array",
+                $items: "i32",
+                $length: 3
+              }
+            }
+          },
           result_service: {
             response_message_format: {
               final_position: {
