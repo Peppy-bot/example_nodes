@@ -64,7 +64,7 @@ async def _run_arm_action(node_runner, side, arm_module):
         duration = _choose_action_duration()
 
         outcome = await _execute_goal(
-            action, last_position, desired_position, duration, arm_module
+            action, node_runner, last_position, desired_position, duration, arm_module
         )
 
         if outcome[0] == "completed":
@@ -116,7 +116,7 @@ def _choose_action_duration():
     return millis / 1000.0
 
 
-async def _execute_goal(action, start, target, duration, arm_module):
+async def _execute_goal(action, node_runner, start, target, duration, arm_module):
     await action.emit_feedback(list(start))
 
     cancel = await _poll_cancel(action, arm_module)
@@ -139,6 +139,11 @@ async def _execute_goal(action, start, target, duration, arm_module):
 
         ratio = step / steps
         current = _interpolate_position(start, target, ratio)
+        cmd_positions = [float(v) for v in current]
+        try:
+            await joint_commands.emit(node_runner, cmd_positions, 1.0)
+        except Exception:
+            pass
         await action.emit_feedback(current)
 
         cancel = await _poll_cancel(action, arm_module)

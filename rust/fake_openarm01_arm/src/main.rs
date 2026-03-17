@@ -18,7 +18,7 @@ async fn publish_joint_states(node_runner: Arc<peppygen::NodeRunner>) {
             break;
         }
         println!("[arm] published joint_states: positions={positions:.3?}");
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        tokio::time::sleep(Duration::from_millis(500)).await;
     }
 }
 

@@ -21,7 +21,7 @@ async def publish_joint_states(node_runner: NodeRunner):
         print(
             f"[arm] published joint_states: positions={[round(p, 3) for p in positions]}"
         )
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.5)
 
 
 async def receive_joint_commands(node_runner: NodeRunner):

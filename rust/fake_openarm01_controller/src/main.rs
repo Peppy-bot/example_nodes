@@ -2,10 +2,10 @@ use peppygen::consumed_topics::robot_arm_joint_states;
 use peppygen::emitted_topics::joint_commands;
 use peppygen::exposed_actions::{move_left_arm, move_right_arm};
 use peppygen::{NodeBuilder, Parameters, Result};
+use peppylib::runtime::CancellationToken;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use peppylib::runtime::CancellationToken;
 
 #[derive(Debug, Clone, Copy)]
 enum ActionOutcome {
@@ -30,16 +30,12 @@ trait ArmAction: Sized + Send {
         node_runner: &peppygen::NodeRunner,
     ) -> impl Future<Output = Result<Self>> + Send + '_;
 
-    fn next_goal(
-        &mut self,
-    ) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_;
+    fn next_goal(&mut self) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_;
 
     fn check_cancel(&mut self) -> impl Future<Output = Result<CancelPoll>> + Send + '_;
 
-    fn send_feedback(
-        &mut self,
-        position: [i32; 3],
-    ) -> impl Future<Output = Result<()>> + Send + '_;
+    fn send_feedback(&mut self, position: [i32; 3])
+    -> impl Future<Output = Result<()>> + Send + '_;
 
     fn send_result(
         &mut self,
@@ -60,9 +56,7 @@ impl ArmAction for move_left_arm::ActionHandle {
         Self::expose(node_runner)
     }
 
-    fn next_goal(
-        &mut self,
-    ) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_ {
+    fn next_goal(&mut self) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_ {
         async move {
             let goal_holder = Arc::new(Mutex::new(None));
             let goal_holder_clone = Arc::clone(&goal_holder);
@@ -128,9 +122,7 @@ impl ArmAction for move_right_arm::ActionHandle {
         Self::expose(node_runner)
     }
 
-    fn next_goal(
-        &mut self,
-    ) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_ {
+    fn next_goal(&mut self) -> impl Future<Output = Result<Option<Self::GoalRequest>>> + Send + '_ {
         async move {
             let goal_holder = Arc::new(Mutex::new(None));
             let goal_holder_clone = Arc::clone(&goal_holder);
@@ -209,12 +201,20 @@ async fn run_arm_action<A: ArmAction>(
         if let Err(e) = joint_commands::emit(&node_runner, cmd_positions, 1.0).await {
             eprintln!("[controller] {side} emit joint_commands error: {e:?}");
         } else {
-            println!("[controller] {side} published joint_commands: target={cmd_positions:.3?} max_vel=1.0");
+            println!(
+                "[controller] {side} published joint_commands: target={cmd_positions:.3?} max_vel=1.0"
+            );
         }
         let duration = choose_action_duration();
 
-        let outcome =
-            execute_goal(&mut action, last_position, desired_position, duration).await?;
+        let outcome = execute_goal(
+            &mut action,
+            &node_runner,
+            last_position,
+            desired_position,
+            duration,
+        )
+        .await?;
 
         let final_position = match outcome {
             ActionOutcome::Completed(position) => {
@@ -258,6 +258,7 @@ async fn run_arm_action<A: ArmAction>(
 
 async fn execute_goal<A: ArmAction>(
     action: &mut A,
+    node_runner: &Arc<peppygen::NodeRunner>,
     start: [i32; 3],
     target: [i32; 3],
     duration: Duration,
@@ -284,6 +285,8 @@ async fn execute_goal<A: ArmAction>(
 
         let ratio = step as f32 / steps as f32;
         current = interpolate_position(start, target, ratio);
+        let cmd_positions = current.map(|v| v as f64);
+        let _ = joint_commands::emit(node_runner, cmd_positions, 1.0).await;
         action.send_feedback(current).await?;
 
         match action.check_cancel().await? {
