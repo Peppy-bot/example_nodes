@@ -3,7 +3,16 @@
   manifest: {
     name: "fake_video_reconstruction",
     tag: "0.1.0",
-    language: "python"
+    language: "python",
+    depends_on: {
+      nodes: [
+        {
+          name: "fake_uvc_camera",
+          tag: "0.1.0",
+          local_id: "camera_stream"
+        }
+      ]
+    },
   },
   container: {
     def_file: "apptainer.def",
@@ -17,23 +26,21 @@
     video_duration_seconds: "u32"
   },
   interfaces: {
-    subscribes_to: {
-      topics: [
+    topics: {
+      consumes: [
         {
-          id: "camera_stream",
-          node: "fake_uvc_camera",
-          tag: "0.1.0",
-          name: "video_stream"
+          local_node_id: "camera_stream",
+          name: "video_stream",
         },
       ],
-      services: [
+    },
+    services: {
+      consumes: [
         {
-          id: "camera_info",
-          node: "fake_uvc_camera",
-          tag: "0.1.0",
-          name: "video_stream_info"
+          local_node_id: "camera_stream",
+          name: "video_stream_info",
         },
       ]
-    },
+    }
   }
 }

@@ -6,8 +6,8 @@ import numpy as np
 
 from peppygen import NodeBuilder, NodeRunner
 from peppygen.parameters import Parameters
-from peppygen.subscribed_services import fake_uvc_camera_video_stream_info
-from peppygen.subscribed_topics import fake_uvc_camera_video_stream
+from peppygen.consumed_services import camera_stream_video_stream_info
+from peppygen.consumed_topics import camera_stream_video_stream
 
 
 async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
@@ -19,7 +19,7 @@ async def record_video(node_runner: NodeRunner, video_duration_seconds: int):
     camera_info = None
     while camera_info is None:
         try:
-            response = await fake_uvc_camera_video_stream_info.poll(
+            response = await camera_stream_video_stream_info.poll(
                 node_runner, timeout=5.0
             )
             camera_info = response.data
@@ -43,7 +43,7 @@ async def record_video(node_runner: NodeRunner, video_duration_seconds: int):
             (
                 _instance_id,
                 message,
-            ) = await fake_uvc_camera_video_stream.on_next_message_received(node_runner)
+            ) = await camera_stream_video_stream.on_next_message_received(node_runner)
             frames.append(message.frame)
             if (frame_num + 1) % camera_info.frames_per_second == 0:
                 print(

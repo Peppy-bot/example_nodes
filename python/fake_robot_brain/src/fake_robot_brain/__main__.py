@@ -2,13 +2,13 @@ import asyncio
 
 from peppygen import NodeBuilder, NodeRunner, QoSProfile
 from peppygen.parameters import Parameters
-from peppygen.subscribed_actions import (
-    fake_openarm01_controller_move_left_arm as left_arm,
+from peppygen.consumed_actions import (
+    openarm01_controller_move_left_arm as left_arm,
 )
-from peppygen.subscribed_actions import (
-    fake_openarm01_controller_move_right_arm as right_arm,
+from peppygen.consumed_actions import (
+    openarm01_controller_move_right_arm as right_arm,
 )
-from peppygen.subscribed_topics import fake_uvc_camera_video_stream as video_stream
+from peppygen.consumed_topics import camera_stream_video_stream as video_stream
 
 
 async def ai_process(node_runner: NodeRunner):

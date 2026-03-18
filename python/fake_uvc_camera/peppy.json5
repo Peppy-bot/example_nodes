@@ -4,17 +4,18 @@
     name: "fake_uvc_camera",
     tag: "0.1.0",
     language: "python",
+    labels: [
+      "uvc",
+      "camera",
+      "usb",
+    ],
   },
   container: {
     def_file: "apptainer.def"
   },
   // Those are fake parameters supposed to emulate a real camera
   parameters: {
-    device: {
-      physical: "string",
-      sim: "string",
-      priority: "string"
-    },
+    device_path: "string",
     video: {
       frame_rate: "u16",
       resolution: {
@@ -25,8 +26,8 @@
     },
   },
   interfaces: {
-    exposes: {
-      topics: [
+    topics: {
+      emits: [
         {
           name: "video_stream",
           qos_profile: "sensor_data",
@@ -46,7 +47,9 @@
           },
         }
       ],
-      services: [
+    },
+    services: {
+      exposes: [
         {
           name: "video_stream_info",
           response_message_format: {

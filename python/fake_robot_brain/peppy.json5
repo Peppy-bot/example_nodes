@@ -3,7 +3,24 @@
   manifest: {
     name: "fake_robot_brain",
     tag: "0.1.0",
-    language: "python"
+    language: "python",
+    labels: [
+      "brain"
+    ],
+    depends_on: {
+      nodes: [
+        {
+          name: "fake_uvc_camera",
+          tag: "0.1.0",
+          local_id: "camera_stream"
+        },
+        {
+          name: "fake_openarm01_controller",
+          tag: "0.1.0",
+          local_id: "openarm01_controller"
+        }
+      ]
+    },
   },
   process: {
     add_cmd: [
@@ -18,44 +35,34 @@
     ]
   },
   interfaces: {
-    exposes: {
-      topics: [],
-      services: [],
-      actions: [],
-    },
-    subscribes_to: {
+    topics: {
       // The brain receives the inputs from the camera
-      topics: [
+      consumes: [
         {
-          id: "camera_stream",
-          node: "fake_uvc_camera",
+          local_node_id: "camera_stream",
           name: "video_stream",
-          tag: "0.1.0",
-        }
-      ],
-      services: [
-        {
-          id: "video_info",
-          node: "fake_uvc_camera",
-          name: "video_stream_info",
-          tag: "0.1.0",
-        }
-      ],
-      // And emit actions for the controller to take
-      actions: [
-        {
-          id: "move_right_arm_action",
-          node: "fake_openarm01_controller",
-          name: "move_right_arm",
-          tag: "0.1.0",
         },
+      ],
+    },
+    services: {
+      consumes: [
         {
-          id: "move_left_arm_action",
-          node: "fake_openarm01_controller",
-          name: "move_left_arm",
-          tag: "0.1.0",
-        }
+          local_node_id: "camera_stream",
+          name: "video_stream_info",
+        },
       ]
     },
+    actions: {
+      consumes: [
+        {
+          local_node_id: "openarm01_controller",
+          name: "move_right_arm"
+        },
+        {
+          local_node_id: "openarm01_controller",
+          name: "move_left_arm"
+        }
+      ]
+    }
   }
 }

@@ -2,12 +2,31 @@ import asyncio
 import time
 
 from peppygen import NodeBuilder, NodeRunner
+from peppygen.consumed_topics import robot_arm_joint_states
+from peppygen.emitted_topics import joint_commands
 from peppygen.exposed_actions import move_left_arm, move_right_arm
 from peppygen.parameters import Parameters
 
 
+async def _receive_joint_states(node_runner: NodeRunner):
+    while True:
+        try:
+            _id, msg = await robot_arm_joint_states.on_next_message_received(
+                node_runner, None, None
+            )
+            print(
+                f"[controller] joint_states update: "
+                f"positions={[round(p, 3) for p in msg.positions]} "
+                f"velocities={[round(v, 3) for v in msg.velocities]}"
+            )
+        except Exception as e:
+            print(f"[controller] joint_states subscription closed: {e!r}")
+            break
+
+
 async def setup(params: Parameters, node_runner: NodeRunner) -> list[asyncio.Task]:
     return [
+        asyncio.create_task(_receive_joint_states(node_runner)),
         asyncio.create_task(_run_arm_action_safe(node_runner, "Left", move_left_arm)),
         asyncio.create_task(_run_arm_action_safe(node_runner, "Right", move_right_arm)),
     ]
@@ -33,10 +52,19 @@ async def _run_arm_action(node_runner, side, arm_module):
 
         desired_position = goal_request.data.desired_position
         print(f"[controller] {side} arm received goal: {desired_position}")
+        cmd_positions = [float(v) for v in desired_position]
+        try:
+            await joint_commands.emit(node_runner, cmd_positions, 1.0)
+            print(
+                f"[controller] {side} published joint_commands: "
+                f"target={[round(p, 3) for p in cmd_positions]} max_vel=1.0"
+            )
+        except Exception as e:
+            print(f"[controller] {side} emit joint_commands error: {e!r}")
         duration = _choose_action_duration()
 
         outcome = await _execute_goal(
-            action, last_position, desired_position, duration, arm_module
+            action, node_runner, last_position, desired_position, duration, arm_module
         )
 
         if outcome[0] == "completed":
@@ -88,7 +116,7 @@ def _choose_action_duration():
     return millis / 1000.0
 
 
-async def _execute_goal(action, start, target, duration, arm_module):
+async def _execute_goal(action, node_runner, start, target, duration, arm_module):
     await action.emit_feedback(list(start))
 
     cancel = await _poll_cancel(action, arm_module)
@@ -111,6 +139,11 @@ async def _execute_goal(action, start, target, duration, arm_module):
 
         ratio = step / steps
         current = _interpolate_position(start, target, ratio)
+        cmd_positions = [float(v) for v in current]
+        try:
+            await joint_commands.emit(node_runner, cmd_positions, 1.0)
+        except Exception:
+            pass
         await action.emit_feedback(current)
 
         cancel = await _poll_cancel(action, arm_module)
